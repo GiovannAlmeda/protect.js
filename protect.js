@@ -41,4 +41,6 @@
       console.error("BlobShield failed to protect:", url, err);
     }
   }
+
+document.addEventListener("contextmenu", (e) => e.preventDefault());
 })();
