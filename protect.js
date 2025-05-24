@@ -1,5 +1,6 @@
 (async function blobShieldProtect() {
   const currentDomain = window.location.hostname;
+
   const allowedDomains = [
     "vaultembed.com",
     "mapmagnet.co",
@@ -13,10 +14,21 @@
   const selector =
     document.currentScript.dataset.selector ||
     "img,video,audio,iframe,object,embed";
+
   const elements = document.querySelectorAll(selector);
 
   for (const el of elements) {
-    const url = el.dataset.src || el.src;
+    let url = el.dataset?.src || el.src;
+
+    // ✅ Check for <video><source src="..."></video>
+    if (!url && el.tagName.toLowerCase() === "video") {
+      const source = el.querySelector("source");
+      if (source) {
+        url = source.getAttribute("src");
+      }
+    }
+
+    // ✅ Skip if nothing to protect or already blobbed
     if (!url || url.startsWith("blob:")) continue;
 
     try {
@@ -24,14 +36,21 @@
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
 
-      // Replace the source
+      // ✅ Replace the source on appropriate element
       if ("src" in el) {
         el.src = blobUrl;
       } else if ("data" in el) {
-        el.data = blobUrl; // used by <object>
+        el.data = blobUrl;
       }
 
-      // Disable interaction
+      // ✅ Handle <video><source> by removing <source> and setting .src
+      if (el.tagName.toLowerCase() === "video") {
+        const source = el.querySelector("source");
+        if (source) source.remove();
+        el.src = blobUrl;
+      }
+
+      // 🛡️ Protection features
       el.setAttribute("draggable", "false");
       el.setAttribute("loading", "lazy");
       el.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -42,5 +61,6 @@
     }
   }
 
-document.addEventListener("contextmenu", (e) => e.preventDefault());
+  // ✅ Global right-click block
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
 })();
