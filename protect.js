@@ -1,6 +1,6 @@
 (async function blobShieldProtect() {
   const currentDomain = window.location.hostname;
-  const allowedDomains = ["vaultembed.com"]; // <- update this list later
+  const allowedDomains = ["vaultembed.com", "app.gohighlevel.com"]; // <- update this list later
 
   if (!allowedDomains.includes(currentDomain)) return;
 
